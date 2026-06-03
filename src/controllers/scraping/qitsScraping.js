@@ -144,7 +144,7 @@ export const insertDataQITS = async (page, data) => {
           if (element) element.click();
         });
 
-        await page.waitForNavigation(3000);//eliminar
+        await page.waitForSelector(".contenedor", { timeout: 5000 });
 
         // Scroll
         await page.locator(".contenedor").scroll({
@@ -208,7 +208,7 @@ export const insertDataQITS = async (page, data) => {
             if (button) button.click();
           });
 
-          await page.waitForNavigation(4000); //eliminar
+          await page.waitForSelector("#formOpGenerales\\:textNroExpediente", { timeout: 5000 });
           continue;
         } else {
           //Validacion de que si el input file existe
@@ -277,7 +277,7 @@ export const insertDataQITS = async (page, data) => {
                 timeout: 5000,
               });
 
-              await page.waitForNavigation(4000); //eliminar
+              await page.waitForSelector("#formOpGenerales\\:textNroExpediente", { timeout: 5000 });
               continue;
             }
           } else {
