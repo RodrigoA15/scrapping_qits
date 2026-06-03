@@ -11,6 +11,7 @@ import {
   URL_TEST_QITS,
   USER_PROD_QITS,
   USER_TEST_QITS,
+  QITS_FILES_PATH
 } from "../../config/config.js";
 
 let pathFileError = join("src/logs/qits", `errorScraping.txt`);
@@ -21,6 +22,16 @@ let pathAlreadyFile = join("src/logs/qits", `alreadyFile.txt`);
 let pathuserNotMatch = join("src/logs/qits", `userNotMatch.txt`);
 
 puppeteer.use(StealthPlugin());
+
+const createScrapingCounts = () => ({
+  successfully: 0,
+  error: 0,
+  notFound: 0,
+  notFoundStatus: 0,
+  notFoundFile: 0,
+  alreadyFile: 0,
+  userNotMatch: 0,
+});
 
 export const loginQITS = async (url, username, password) => {
   let browser;
@@ -60,13 +71,9 @@ export const loginQITS = async (url, username, password) => {
 };
 
 export const insertDataQITS = async (page, data) => {
+  const counts = createScrapingCounts();
+
   try {
-    let countSuccesfully = 0;
-    let countError = 0;
-    let countNotFound = 0;
-    let countNotFoundStatus = 0;
-    let countNotFoundFile = 0;
-    let alreadyFile = 0;
     await page.waitForSelector(".liContentOpcionesConsultas", {
       visible: true,
       timeout: 5000,
@@ -105,11 +112,10 @@ export const insertDataQITS = async (page, data) => {
           console.log(
             `No se encontró información para el expediente ${item.NRO_EXPEDIENTE}`,
           );
-          countNotFound++;
+          counts.notFound++;
           appendFile(
             pathFileError,
-            `No se encontró información para el expediente ${
-              item.NRO_EXPEDIENTE
+            `No se encontró información para el expediente ${item.NRO_EXPEDIENTE
             } ${new Date().toLocaleString()}\n`,
             (err) => {
               if (err) throw err;
@@ -138,7 +144,7 @@ export const insertDataQITS = async (page, data) => {
           if (element) element.click();
         });
 
-        await page.waitForNavigation(3000);
+        await page.waitForNavigation(3000);//eliminar
 
         // Scroll
         await page.locator(".contenedor").scroll({
@@ -171,10 +177,10 @@ export const insertDataQITS = async (page, data) => {
         const idDataLimpia = String(item.NUMERO_DOCUMENTO).replace(/\D/g, "");
 
         if (idWebLimpia !== idDataLimpia) {
+          counts.userNotMatch++;
           appendFile(
             pathuserNotMatch,
-            `${idWebLimpia} NO coincide con el identificador de la data (${idDataLimpia}). Expediente ${textToCheck} ${
-              item.NRO_EXPEDIENTE
+            `${idWebLimpia} NO coincide con el identificador de la data (${idDataLimpia}). Expediente ${textToCheck} ${item.NRO_EXPEDIENTE
             } ${new Date().toLocaleString()}\n`,
             (err) => {
               if (err) throw err;
@@ -185,11 +191,10 @@ export const insertDataQITS = async (page, data) => {
         const isTextVisible = texts.includes(textToCheck);
 
         if (isTextVisible) {
-          alreadyFile++;
+          counts.alreadyFile++;
           appendFile(
             pathAlreadyFile,
-            `Expediente ${textToCheck} ya ingresado ${
-              item.NRO_EXPEDIENTE
+            `Expediente ${textToCheck} ya ingresado ${item.NRO_EXPEDIENTE
             } ${new Date().toLocaleString()}\n`,
             (err) => {
               if (err) throw err;
@@ -203,7 +208,7 @@ export const insertDataQITS = async (page, data) => {
             if (button) button.click();
           });
 
-          await page.waitForNavigation(4000);
+          await page.waitForNavigation(4000); //eliminar
           continue;
         } else {
           //Validacion de que si el input file existe
@@ -213,7 +218,7 @@ export const insertDataQITS = async (page, data) => {
 
           if (elementHandle != null) {
             const pathFile = join(
-              "C:\\Users\\manuel.ardila\\Downloads\\AGOSTO 2022 DEVOLUCIONES\\EXPEDIENTES_DEVOLUCIONES_AGOSTO",
+              QITS_FILES_PATH,
               `${item.NRO_EXPEDIENTE}.pdf`,
             );
 
@@ -234,14 +239,13 @@ export const insertDataQITS = async (page, data) => {
 
               appendFile(
                 pathFileSuccessfully,
-                `Expediente ${
-                  item.NRO_EXPEDIENTE
+                `Expediente ${item.NRO_EXPEDIENTE
                 } cargado correctamente - ${new Date().toLocaleString()}\n`,
                 function (err) {
                   if (err) throw err;
                 },
               );
-              countSuccesfully++;
+              counts.successfully++;
 
               await setTimeout(2000);
 
@@ -253,11 +257,10 @@ export const insertDataQITS = async (page, data) => {
                 if (button) button.click();
               });
             } else {
-              countNotFoundFile++;
+              counts.notFoundFile++;
               appendFile(
                 pathFileNotFoundFile,
-                `No se encontró el archivo para el expediente ${
-                  item.NRO_EXPEDIENTE
+                `No se encontró el archivo para el expediente ${item.NRO_EXPEDIENTE
                 } ${new Date().toLocaleString()}\n`,
                 function (err) {
                   if (err) throw err;
@@ -274,15 +277,14 @@ export const insertDataQITS = async (page, data) => {
                 timeout: 5000,
               });
 
-              await page.waitForNavigation(4000);
+              await page.waitForNavigation(4000); //eliminar
               continue;
             }
           } else {
-            countNotFoundStatus++;
+            counts.notFoundStatus++;
             appendFile(
               pathFileNotFoundStatus,
-              `No se encontró el input para el expediente ${
-                item.NRO_EXPEDIENTE
+              `No se encontró el input para el expediente ${item.NRO_EXPEDIENTE
               } ${new Date().toLocaleString()}\n`,
               function (err) {
                 if (err) throw err;
@@ -303,11 +305,10 @@ export const insertDataQITS = async (page, data) => {
         }
       } catch (err) {
         console.log(err);
-        countError++;
+        counts.error++;
         appendFile(
           pathFileError,
-          `Error al cargar expediente ${item.NRO_EXPEDIENTE} ${
-            err.message
+          `Error al cargar expediente ${item.NRO_EXPEDIENTE} ${err.message
           } ${new Date().toLocaleString()}\n`,
           function (err) {
             if (err) throw err;
@@ -316,9 +317,10 @@ export const insertDataQITS = async (page, data) => {
         continue;
       }
     }
+
+    return counts;
   } catch (error) {
     console.error("Error en insertData QITS:", error);
-    if (browser) await browser.close();
     throw error;
   }
 };
@@ -334,23 +336,32 @@ export const scrapingQITS = async (req, res) => {
   }
   let browser;
   try {
-    const session = await loginQITS(
-      URL_TEST_QITS,
-      USER_TEST_QITS,
-      PASSWORD_TEST_QITS,
-    );
+    //const session = await loginQITS(
+    //  URL_TEST_QITS,
+    //  USER_TEST_QITS,
+    //  PASSWORD_TEST_QITS,
+    //);
 
-    // const session = await loginQITS(
-    //   URL_PROD_QITS,
-    //   USER_PROD_QITS,
-    //   PASSWORD_PROD_QITS,
-    // );
+    const session = await loginQITS(
+      URL_PROD_QITS,
+      USER_PROD_QITS,
+      PASSWORD_PROD_QITS,
+    );
     browser = session.browser;
-    await insertDataQITS(session.page, data);
+    const counts = await insertDataQITS(session.page, data);
+
+    return res.status(200).json({
+      message: "Scraping completado",
+      total: data.length,
+      counts,
+    });
   } catch (error) {
     console.error("Error crítico:", error);
-    throw error;
+    return res.status(500).json({
+      message: "Error durante el scraping",
+      error: error.message,
+    });
   } finally {
-    if (browser) await browser.close(); // Se asegura de cerrar SIEMPRE
+    if (browser) await browser.close();
   }
 };

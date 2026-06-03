@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { insertDataQITS, loginQITS, scrapingQITS } from "../controllers/scraping/qitsScraping.js";
+import { scrapingQITS } from "../controllers/scraping/qitsScraping.js";
 
 const router = Router();
 
