@@ -163,7 +163,7 @@ export const insertDataQITS = async (page, data) => {
         );
 
         // Buscamos el span que dice 'Identificación' y seleccionamos el hermano (span) siguiente
-        const element = await page.waitForSelector(
+        /*const element = await page.waitForSelector(
           'xpath///span[contains(text(), "Identificación")]/following-sibling::span',
         );
 
@@ -186,7 +186,7 @@ export const insertDataQITS = async (page, data) => {
               if (err) throw err;
             },
           );
-        }
+        }*/
         // Verifica si el texto "Profile" está presente en alguno de los elementos
         const isTextVisible = texts.includes(textToCheck);
 
