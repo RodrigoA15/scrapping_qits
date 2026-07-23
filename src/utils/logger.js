@@ -11,6 +11,7 @@ export const logEvent = async (type, message) => {
     notFoundFile: "notFoundFile.txt",
     alreadyFile: "alreadyFile.txt",
     userNotMatch: "userNotMatch.txt",
+    notFound: "notFoundExpediente.txt"
   };
 
   const fileName = fileNames[type];
